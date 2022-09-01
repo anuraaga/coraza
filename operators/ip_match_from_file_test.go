@@ -4,6 +4,8 @@
 package operators
 
 import (
+	"io/fs"
+	"os"
 	"testing"
 
 	"github.com/corazawaf/coraza/v3"
@@ -16,7 +18,7 @@ func TestFromFile(t *testing.T) {
 	ipm := &ipMatchFromFile{}
 	opts := coraza.RuleOperatorOptions{
 		Arguments: string("./testdata/op/netranges.dat"),
-		Path:      []string{"."},
+		Path:      []fs.FS{os.DirFS(".")},
 	}
 	if err := ipm.Init(opts); err != nil {
 		t.Error("Cannot init ipmatchfromfile operator")

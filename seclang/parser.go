@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,7 +25,7 @@ type Parser struct {
 	options      *DirectiveOptions
 	currentLine  int
 	currentFile  string
-	currentDir   string
+	currentDir   fs.FS
 	includeCount int
 }
 
@@ -46,13 +47,23 @@ func (p *Parser) FromFile(profilePath string) error {
 	}
 	for _, profilePath := range files {
 		profilePath = strings.TrimSpace(profilePath)
-		if !strings.HasPrefix(profilePath, "/") {
-			profilePath = filepath.Join(p.currentDir, profilePath)
-		}
+		profileBase := filepath.Base(profilePath)
+		profileDir := filepath.Dir(profilePath)
 		p.currentFile = profilePath
 		lastDir := p.currentDir
-		p.currentDir = filepath.Dir(profilePath)
-		file, err := os.ReadFile(profilePath)
+		var currentDir fs.FS
+		if lastDir == nil {
+			currentDir = os.DirFS(profileDir)
+		} else {
+			cd, err := fs.Sub(lastDir, profileDir)
+			if err != nil {
+				p.options.Waf.Logger.Error(err.Error())
+				return err
+			}
+			currentDir = cd
+		}
+		p.currentDir = currentDir
+		file, err := fs.ReadFile(currentDir, profileBase)
 		if err != nil {
 			p.options.Waf.Logger.Error(err.Error())
 			return err
@@ -141,12 +152,10 @@ func (p *Parser) evaluate(data string) error {
 	p.options.Opts = opts
 	p.options.Config.Set("last_profile_line", p.currentLine)
 	p.options.Config.Set("parser_config_file", p.currentFile)
-	p.options.Config.Set("parser_config_dir", p.currentDir)
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
+	if p.currentDir != nil {
+		p.options.Config.Set("parser_config_dir", p.currentDir)
 	}
-	p.options.Config.Set("working_dir", wd)
+	p.options.Config.Set("working_dir", os.DirFS("."))
 
 	return d(p.options)
 }
@@ -162,6 +171,12 @@ func (p *Parser) log(msg string) error {
 // overwritten by this function
 // It is mostly used by operators that consumes relative paths
 func (p *Parser) SetCurrentDir(dir string) {
+	p.currentDir = os.DirFS(dir)
+}
+
+// SetCurrentFS sets the fs.FS to use as the current directory when
+// resolving relative paths.
+func (p *Parser) SetCurrentFS(dir fs.FS) {
 	p.currentDir = dir
 }
 

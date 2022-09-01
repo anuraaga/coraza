@@ -6,6 +6,7 @@ package seclang
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"regexp"
 	"strings"
 
@@ -193,12 +194,16 @@ func (p *RuleParser) ParseOperator(operator string) error {
 	}
 	data := []byte(opdata)
 
+	var path []fs.FS
+	if dir := p.options.Config.Get("parser_config_dir", nil); dir != nil {
+		path = append(path, dir.(fs.FS))
+	}
+	if dir := p.options.Config.Get("working_dir", nil); dir != nil {
+		path = append(path, dir.(fs.FS))
+	}
 	opts := coraza.RuleOperatorOptions{
 		Arguments: string(data),
-		Path: []string{
-			p.options.Config.Get("parser_config_dir", "").(string),
-			p.options.Config.Get("working_dir", "").(string),
-		},
+		Path:      path,
 	}
 	err = opfn.Init(opts)
 	if err != nil {

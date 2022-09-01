@@ -4,6 +4,7 @@
 package operators
 
 import (
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -31,7 +32,7 @@ func TestLoadFromFileNoPaths(t *testing.T) {
 }
 
 func TestLoadFromFileNoExist(t *testing.T) {
-	content, err := loadFromFile("non-existing-file", []string{t.TempDir()})
+	content, err := loadFromFile("non-existing-file", []fs.FS{os.DirFS(t.TempDir())})
 	if err == nil {
 		t.Errorf("expected error: %s", os.ErrNotExist.Error())
 	}
@@ -57,7 +58,7 @@ func TestLoadFromFileAbsolutePath(t *testing.T) {
 func TestLoadFromFileRelativePath(t *testing.T) {
 	testDir, testFile := getTestFile(t)
 
-	content, err := loadFromFile(testFile, []string{"/does-not-exist", testDir})
+	content, err := loadFromFile(testFile, []fs.FS{os.DirFS("/does-not-exist"), os.DirFS(testDir)})
 	if err != nil {
 		t.Errorf("failed to load from file: %s", err.Error())
 	}

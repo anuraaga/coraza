@@ -5,6 +5,7 @@ package coraza
 
 import (
 	"fmt"
+	"io/fs"
 	"regexp"
 	"strconv"
 	"strings"
@@ -51,7 +52,7 @@ type RuleOperatorOptions struct {
 	Arguments string
 
 	// Path is used to store a list of possible data paths
-	Path []string
+	Path []fs.FS
 
 	// Datasets contains input datasets or dictionaries
 	Datasets map[string][]string

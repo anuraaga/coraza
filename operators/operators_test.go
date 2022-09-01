@@ -5,6 +5,7 @@ package operators
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -84,7 +85,7 @@ func TestOperators(t *testing.T) {
 
 					opts := coraza.RuleOperatorOptions{
 						Arguments: data.Param,
-						Path:      []string{"./testdata/op"},
+						Path:      []fs.FS{os.DirFS(filepath.Join("testdata", "op"))},
 					}
 					if err := op.Init(opts); err != nil {
 						t.Error(err)
