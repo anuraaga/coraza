@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -237,11 +238,17 @@ SecRule REQUEST_HEADERS:X-CRS-Test "@rx ^.*$" \
 	config.FTWConfig.LogFile = errorPath
 	config.FTWConfig.TestOverride.Input.DestAddr = &host
 	config.FTWConfig.TestOverride.Input.Port = &port
+	config.FTWConfig.RunMode = config.CloudRunMode
 
-	res := runner.Run(tests, runner.Config{
+	res, err := runner.Run(tests, runner.Config{
+		Include:  regexp.MustCompile("930110-3"),
 		ShowTime: false,
 		Quiet:    true,
 	})
+
+	if err != nil {
+		t.Fatalf("error running ftw: %v", err)
+	}
 
 	if len(res.Stats.Failed) > 0 {
 		t.Errorf("failed tests: %v", res.Stats.Failed)
