@@ -101,8 +101,22 @@ func (rg *RuleGroup) Eval(phase types.RulePhase, tx *Transaction) bool {
 	usedRules := 0
 	ts := time.Now().UnixNano()
 	transformationCache := tx.transformationCache
+	println("attempt to clear map")
 	for k := range transformationCache {
+		if _, ok := transformationCache[k]; !ok {
+			println("couldn't find key")
+		} else {
+			println("could find key")
+		}
 		delete(transformationCache, k)
+		if _, ok := transformationCache[k]; !ok {
+			println("couldn't find key")
+		} else {
+			println("could find key")
+		}
+	}
+	if len(transformationCache) > 0 {
+		panic("foo")
 	}
 RulesLoop:
 	for _, r := range tx.WAF.Rules.GetRules() {
