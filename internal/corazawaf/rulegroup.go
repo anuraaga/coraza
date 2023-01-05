@@ -104,6 +104,9 @@ func (rg *RuleGroup) Eval(phase types.RulePhase, tx *Transaction) bool {
 	for k := range transformationCache {
 		delete(transformationCache, k)
 	}
+	if len(transformationCache) > 0 {
+		panic("transformation cache not empty")
+	}
 RulesLoop:
 	for _, r := range tx.WAF.Rules.GetRules() {
 		if tx.interruption != nil && phase != types.PhaseLogging {
